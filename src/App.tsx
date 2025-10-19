@@ -817,8 +817,8 @@ export const PaginaAlunos: React.FC = () => {
                 key={index}
                 className={`flex justify-between items-center p-4 rounded-lg transition-colors ${
                   editingIndex === index
-                    ? "bg-indigo-100 border border-indigo-400"
-                    : "bg-slate-50"
+                    ? "bg-indigo-100 border border-indigo-400 hover:bg-indigo-200"
+                    : "bg-slate-50 hover:bg-slate-100"
                 }`}
               >
                 <span className="font-medium text-slate-700">{aluno.nome}</span>
