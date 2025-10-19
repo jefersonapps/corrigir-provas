@@ -4,6 +4,7 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   type ReactNode,
 } from "react";
 
@@ -876,6 +877,10 @@ export const PaginaResultados: React.FC = () => {
   const navigate = useNavigate();
   const tabelaRef = useRef<HTMLTableElement>(null);
 
+  const alunosOrdenados = useMemo(() => {
+    return [...alunos].sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [alunos]);
+
   const tituloCompleto =
     disciplina && serie ? `${disciplina} - ${serie}` : "Resultados da Prova";
 
@@ -946,54 +951,56 @@ export const PaginaResultados: React.FC = () => {
         doc.setDrawColor(213, 213, 213);
       },
       didDrawPage: (data: HookData) => {
-        const tableWidth = data.table.columns.reduce(
-          (total, col) => total + col.width,
-          0
-        );
-        const tableX = data.settings.margin.left;
+        if (data.pageNumber === 1) {
+          const tableWidth = data.table.columns.reduce(
+            (total, col) => total + col.width,
+            0
+          );
+          const tableX = data.settings.margin.left;
 
-        doc.setDrawColor(213, 213, 213);
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(
-          tableX,
-          topMargin,
-          tableWidth,
-          legendHeight,
-          1,
-          1,
-          "FD"
-        );
+          doc.setDrawColor(213, 213, 213);
+          doc.setFillColor(248, 250, 252);
+          doc.roundedRect(
+            tableX,
+            topMargin,
+            tableWidth,
+            legendHeight,
+            1,
+            1,
+            "FD"
+          );
 
-        const legendPadding = 4;
-        const squareSize = 4;
-        const textFontSize = 9;
-        const gapBetweenItems = 10;
-        const paddingSquareText = 2;
+          const legendPadding = 4;
+          const squareSize = 4;
+          const textFontSize = 9;
+          const gapBetweenItems = 10;
+          const paddingSquareText = 2;
 
-        let contentStartX = tableX + legendPadding;
-        const legendCenterY = topMargin + legendHeight / 2;
-        const squareY = legendCenterY - squareSize / 2;
+          let contentStartX = tableX + legendPadding;
+          const legendCenterY = topMargin + legendHeight / 2;
+          const squareY = legendCenterY - squareSize / 2;
 
-        doc.setFontSize(textFontSize);
-        doc.setTextColor(15, 23, 42);
+          doc.setFontSize(textFontSize);
+          doc.setTextColor(15, 23, 42);
 
-        doc.setDrawColor(213, 213, 213);
-        doc.setFillColor(213, 229, 213);
-        doc.rect(contentStartX, squareY, squareSize, squareSize, "FD");
+          doc.setDrawColor(213, 213, 213);
+          doc.setFillColor(213, 229, 213);
+          doc.rect(contentStartX, squareY, squareSize, squareSize, "FD");
 
-        const text1 = "Resposta Certa";
-        const text1X = contentStartX + squareSize + paddingSquareText;
-        doc.text(text1, text1X, legendCenterY, { baseline: "middle" });
+          const text1 = "Resposta Certa";
+          const text1X = contentStartX + squareSize + paddingSquareText;
+          doc.text(text1, text1X, legendCenterY, { baseline: "middle" });
 
-        const text1Width = doc.getTextWidth(text1);
-        contentStartX = text1X + text1Width + gapBetweenItems;
+          const text1Width = doc.getTextWidth(text1);
+          contentStartX = text1X + text1Width + gapBetweenItems;
 
-        doc.setFillColor(242, 192, 192);
-        doc.rect(contentStartX, squareY, squareSize, squareSize, "FD");
+          doc.setFillColor(242, 192, 192);
+          doc.rect(contentStartX, squareY, squareSize, squareSize, "FD");
 
-        const text2 = "Resposta Errada";
-        const text2X = contentStartX + squareSize + paddingSquareText;
-        doc.text(text2, text2X, legendCenterY, { baseline: "middle" });
+          const text2 = "Resposta Errada";
+          const text2X = contentStartX + squareSize + paddingSquareText;
+          doc.text(text2, text2X, legendCenterY, { baseline: "middle" });
+        }
       },
       didParseCell: (data) => {
         if (data.row.section === "head" && data.column.index > 0) {
@@ -1004,7 +1011,7 @@ export const PaginaResultados: React.FC = () => {
           data.cell.styles.fillColor = isEvenRow ? "#ffffff" : "#f8fafc";
           if (data.column.index > 0 && data.column.index <= numQuestoes) {
             const resposta =
-              alunos[data.row.index]?.respostas[data.column.index - 1];
+              alunosOrdenados[data.row.index]?.respostas[data.column.index - 1];
             const gabaritoResp = gabarito[data.column.index - 1];
             if (resposta && gabaritoResp) {
               if (resposta.toUpperCase() === gabaritoResp.toUpperCase()) {
@@ -1034,7 +1041,7 @@ export const PaginaResultados: React.FC = () => {
       "MÉDIA",
     ];
 
-    const studentData = alunos.map((aluno) => [
+    const studentData = alunosOrdenados.map((aluno) => [
       aluno.nome,
       ...aluno.respostas,
       calcularMedia(aluno.respostas),
@@ -1158,13 +1165,13 @@ export const PaginaResultados: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {alunos.map((aluno, alunoIndex) => {
+            {alunosOrdenados.map((aluno, alunoIndex) => {
               const isEvenRow = alunoIndex % 2 === 0;
               const rowBgColor = isEvenRow ? "#ffffff" : "#f8fafc";
 
               return (
                 <tr
-                  key={alunoIndex}
+                  key={aluno.nome}
                   style={{
                     backgroundColor: rowBgColor,
                     borderBottom: "1px solid #d5d5d5",
